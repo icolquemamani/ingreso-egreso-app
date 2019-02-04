@@ -1,29 +1,48 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
-import { map } from 'rxjs/operators';
+import { map, subscribeOn } from 'rxjs/operators';
+
+import { User } from './user.model';
+import { AngularFirestore } from '@angular/fire/firestore';
+
+import { Store } from '@ngrx/store';
+import { AppState } from '../app.reducers';
+import { ActivarLoadingAction, DesactivarLoadingAction } from '../shared/ui.actions';
 
 import Swal from 'sweetalert2';
 import * as firebase from 'firebase';
-import { User } from './user.model';
-import { AngularFirestore } from '@angular/fire/firestore';
+import { SetUserAction } from './auth.actions';
+import { Subscription } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private _userSubscription: Subscription = new Subscription();
 
   constructor( private _afAuth: AngularFireAuth,
                private _router: Router,
-               private _afDB: AngularFirestore ) { }
+               private _afDB: AngularFirestore,
+               private _store: Store<AppState> ) { }
 
   initAuthListener() {
     this._afAuth.authState.subscribe( (fbUser: firebase.User) => {
-      console.log('user', fbUser)
+      if ( fbUser ) {
+        this._userSubscription = this._afDB.doc(`${ fbUser.uid }/usuario`)
+                  .valueChanges()
+                  .subscribe((usuarioObj:any) => {
+                    const user = new User( usuarioObj );
+                    this._store.dispatch( new SetUserAction(user) );
+                  });
+      } else {
+        this._userSubscription.unsubscribe();
+      }
     });
   }
 
   crearUsuario( email, nombre, password ) {
+    this._store.dispatch( new ActivarLoadingAction() );
     this._afAuth.auth
                 .createUserWithEmailAndPassword( email, password )
                 .then(resp => {
@@ -38,10 +57,12 @@ export class AuthService {
                       .set( user)
                       .then(() => {
                         this._router.navigate(['/'])
+                        this._store.dispatch( new DesactivarLoadingAction() );
                       });
                 })
                 .catch(err => {
                   console.error(err);
+                  this._store.dispatch( new DesactivarLoadingAction() );
                   Swal.fire({
                     title: 'Register Error!',
                     text: err.message,
@@ -52,14 +73,17 @@ export class AuthService {
   }
 
   login( email: string, password: string ) {
+    this._store.dispatch( new ActivarLoadingAction() );
     this._afAuth.auth
                 .signInWithEmailAndPassword( email, password )
                 .then(resp => {
                   console.log(resp);
                   this._router.navigate(['/'])
+                  this._store.dispatch( new DesactivarLoadingAction() );
                 })
                 .catch(err => {
                   console.error(err);
+                  this._store.dispatch( new DesactivarLoadingAction() );
                   Swal.fire({
                     title: 'Login Error!',
                     text: err.message,

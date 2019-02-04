@@ -3,10 +3,10 @@ export class User {
     public email: string;
     public uid: string;
 
-    constructor( nombre: string, email: string, uid: string ) {
-        this.nombre = nombre;
-        this.email  = email;
-        this.uid    = uid;
+    constructor( dataUser: DataUser ) {
+        this.nombre = dataUser ? dataUser.nombre : null;
+        this.email  = dataUser ? dataUser.email : null;
+        this.uid    = dataUser ? dataUser.uid : null;
     }   
 
     // get nombre() {
@@ -32,4 +32,10 @@ export class User {
     // set uid( uid: string) {
     //     this._uid = uid;
     // }
-}   
+} 
+
+interface DataUser {
+    nombre: string;
+    email: string;
+    uid: string;
+}
