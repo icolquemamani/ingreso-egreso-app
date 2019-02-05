@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { AppState } from '../../app.reducers';
+//importante usar AppState del reducer
+import { AppState } from '../ingreso-egreso.reducers';
 import { map } from 'rxjs/operators';
 import { IngresoEgresoService } from '../ingreso-egreso.service';
 import Swal from 'sweetalert2';
