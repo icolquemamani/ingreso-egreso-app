@@ -10,16 +10,26 @@
                   <th>Descripción</th>
                   <th>Monto</th>
                   <th>Tipo</th>
-                  <th></th>
+                  <th>Aciones</th>
                 </tr>
               </thead>
 
               <tbody>
-                <tr>
-                  <td>Descripción</td>
-                  <td>Monto</td>
-                  <td>Tipo</td>
-                  <td>acciones</td>
+                <tr *ngFor="let item of $items | async | ordenIE ">
+                  <td>{{ item.descripcion }}</td>
+                  <td>{{ item.monto | number }}</td>
+                  <td>
+                    <span [ngClass]="{'text-success': item.tipo === 'ingreso',
+                                      'text-danger': item.tipo === 'egreso'}">
+                      {{ item.tipo }}
+                    </span>
+                  </td>
+                  <td>
+                    <button (click)="borrarItem(item)" class="btn btn-danger btn-sm">
+                      <i class="fa fa-trash"></i>
+                      Borrar
+                    </button>
+                  </td>
                 </tr>
               </tbody>
 

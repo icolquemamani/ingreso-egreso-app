@@ -12,7 +12,7 @@ import { ActivarLoadingAction, DesactivarLoadingAction } from '../shared/ui.acti
 
 import Swal from 'sweetalert2';
 import * as firebase from 'firebase';
-import { SetUserAction } from './auth.actions';
+import { SetUserAction, UnsetUserAction } from './auth.actions';
 import { Subscription } from 'rxjs';
 
 @Injectable({
@@ -20,6 +20,7 @@ import { Subscription } from 'rxjs';
 })
 export class AuthService {
   private _userSubscription: Subscription = new Subscription();
+  private _ususario: User;
 
   constructor( private _afAuth: AngularFireAuth,
                private _router: Router,
@@ -34,8 +35,10 @@ export class AuthService {
                   .subscribe((usuarioObj:any) => {
                     const user = new User( usuarioObj );
                     this._store.dispatch( new SetUserAction(user) );
+                    this._ususario = user;
                   });
       } else {
+        this._ususario = null;
         this._userSubscription.unsubscribe();
       }
     });
@@ -94,19 +97,19 @@ export class AuthService {
   }
 
   logout() {
-    this._afAuth.auth.signOut().then(resp => {
-      console.log(resp);
-      this._router.navigate(['/login']);
-    })
-    .catch(err => {
-      console.error(err);
-      Swal.fire({
-        title: 'Logout Error!',
-        text: err.message,
-        type: 'error',
-        confirmButtonText: 'OK'
-      });
-    });
+    this._afAuth.auth.signOut()
+        .then(resp => {
+          this._store.dispatch( new UnsetUserAction() );
+          this._router.navigate(['/login']);
+        })
+        .catch(err => {
+          Swal.fire({
+            title: 'Logout Error!',
+            text: err.message,
+            type: 'error',
+            confirmButtonText: 'OK'
+          });
+        });
   }
 
   isAuth() {
@@ -118,5 +121,9 @@ export class AuthService {
           return fbUser =! null;
         })
       ) 
+  }
+
+  getUsuario() {
+    return { ...this._ususario };
   }
 }
